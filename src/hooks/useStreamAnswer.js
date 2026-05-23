@@ -3,9 +3,9 @@ import { useCallback } from 'react';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export function useStreamAnswer() {
-  const streamAnswer = useCallback(async ({ question, onChunk, onDone, onError, signal }) => {
+  const streamAnswer = useCallback(async ({ question, sessionId, onTranscript, onChunk, onDone, onError, signal }) => {
     try {
-      const payload = { question };
+      const payload = { question, session_id: sessionId };
 
       console.log('Sending payload to backend:', payload);
 
@@ -26,6 +26,16 @@ export function useStreamAnswer() {
         throw new Error('Streaming not supported by this browser');
       }
 
+      const nextSessionId = response.headers.get('X-Session-ID');
+      const correctedTranscript = response.headers.get('X-Transcript');
+      const originalTranscript = response.headers.get('X-Original-Transcript');
+
+      onTranscript?.({
+        sessionId: nextSessionId,
+        transcript: correctedTranscript || question,
+        originalTranscript: originalTranscript || question,
+      });
+
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
 
@@ -39,11 +49,15 @@ export function useStreamAnswer() {
         const chunk = decoder.decode(value, { stream: true });
 
         if (chunk) {
-          onChunk?.(chunk);
+          const visibleChunk = chunk.replaceAll('[DONE]', '').replaceAll('[SKIP]', '');
+
+          if (visibleChunk) {
+            onChunk?.(visibleChunk);
+          }
         }
       }
 
-      const lastChunk = decoder.decode();
+      const lastChunk = decoder.decode().replaceAll('[DONE]', '').replaceAll('[SKIP]', '');
 
       if (lastChunk) {
         onChunk?.(lastChunk);

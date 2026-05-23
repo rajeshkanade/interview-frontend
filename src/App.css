@@ -352,4 +352,12 @@ textarea {
     min-height: 180px;
     font-size: 0.98rem;
   }
+
+  .history-panel {
+    max-height: none;
+  }
+
+  .history-list {
+    overflow: visible;
+  }
 }

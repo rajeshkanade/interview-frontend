@@ -75,6 +75,8 @@ function normalizeSpokenText(text) {
 
 export function useVoiceInput({ isActive, onInterimChange, onSentenceComplete, onError }) {
   const recognitionRef = useRef(null);
+  const isRecognitionRunningRef = useRef(false);
+  const isMobileRef = useRef(false);
   const restartRequestedRef = useRef(false);
   const silenceTimerRef = useRef(null);
   const finalTranscriptRef = useRef('');
@@ -131,6 +133,7 @@ export function useVoiceInput({ isActive, onInterimChange, onSentenceComplete, o
       if (recognitionRef.current) {
         try {
           recognitionRef.current.abort();
+          isRecognitionRunningRef.current = false;
         } catch (error) {
           onErrorRef.current?.(error);
         }
@@ -146,6 +149,22 @@ export function useVoiceInput({ isActive, onInterimChange, onSentenceComplete, o
     }
 
     const isMobile = /Android|iPhone|iPad|iPod/i.test(window.navigator.userAgent);
+    isMobileRef.current = isMobile;
+
+    const startRecognition = () => {
+      if (isRecognitionRunningRef.current) {
+        return;
+      }
+
+      try {
+        recognitionRef.current.start();
+        isRecognitionRunningRef.current = true;
+      } catch (error) {
+        if (error.name !== 'InvalidStateError') {
+          onErrorRef.current?.(error);
+        }
+      }
+    };
 
     if (!recognitionRef.current) {
       const recognition = new SpeechRecognition();
@@ -200,37 +219,30 @@ export function useVoiceInput({ isActive, onInterimChange, onSentenceComplete, o
           return;
         }
 
+        isRecognitionRunningRef.current = false;
         onErrorRef.current?.(new Error(event.error || 'Speech recognition error'));
       };
 
       recognition.onend = () => {
-        if (restartRequestedRef.current) {
-          try {
-            recognition.start();
-          } catch (error) {
-            window.setTimeout(() => {
-              try {
-                recognition.start();
-              } catch (startError) {
-                onErrorRef.current?.(startError);
-              }
-            }, 150);
-          }
+        isRecognitionRunningRef.current = false;
+
+        if (finalTranscriptRef.current || interimTranscriptRef.current) {
+          clearTimeout(silenceTimerRef.current);
+          flushTranscript();
         }
+
+        if (!restartRequestedRef.current || isMobileRef.current) {
+          return;
+        }
+
+        window.setTimeout(startRecognition, 250);
       };
 
       recognitionRef.current = recognition;
     }
 
     restartRequestedRef.current = true;
-
-    try {
-      recognitionRef.current.start();
-    } catch (error) {
-      if (error.name !== 'InvalidStateError') {
-        onError?.(error);
-      }
-    }
+    startRecognition();
 
     return () => {
       restartRequestedRef.current = false;

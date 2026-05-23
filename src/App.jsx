@@ -14,6 +14,7 @@ function App() {
   const { streamAnswer } = useStreamAnswer();
   const answerQueuesRef = useRef(new Map());
   const answerTimersRef = useRef(new Map());
+  const sessionIdRef = useRef(null);
 
   useEffect(
     () => () => {
@@ -118,6 +119,24 @@ function App() {
 
       void streamAnswer({
         question,
+        sessionId: sessionIdRef.current,
+        onTranscript: ({ sessionId, transcript, originalTranscript }) => {
+          if (sessionId) {
+            sessionIdRef.current = sessionId;
+          }
+
+          setQaHistory((previous) =>
+            previous.map((entry) =>
+              entry.id === entryId
+                ? {
+                    ...entry,
+                    question: transcript || entry.question,
+                    originalQuestion: originalTranscript,
+                  }
+                : entry,
+            ),
+          );
+        },
         onChunk: (chunk) => {
           enqueueAnswerChunk(entryId, chunk);
         },
@@ -182,6 +201,9 @@ function App() {
     setCurrentInterim('');
     setIsSessionActive((previous) => {
       const next = !previous;
+      if (!next) {
+        sessionIdRef.current = null;
+      }
       return next;
     });
   };
