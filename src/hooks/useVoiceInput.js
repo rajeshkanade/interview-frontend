@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 
 const SILENCE_DURATION = 1500;
 const DUPLICATE_SUBMISSION_WINDOW = 2500;
+const DESKTOP_RESTART_DELAY = 250;
+const MOBILE_RESTART_DELAY = 1200;
 
 function collapseRepeatedPhrases(words) {
   const result = [];
@@ -78,6 +80,7 @@ export function useVoiceInput({ isActive, onInterimChange, onSentenceComplete, o
   const isRecognitionRunningRef = useRef(false);
   const isMobileRef = useRef(false);
   const restartRequestedRef = useRef(false);
+  const restartTimerRef = useRef(null);
   const silenceTimerRef = useRef(null);
   const finalTranscriptRef = useRef('');
   const interimTranscriptRef = useRef('');
@@ -122,6 +125,8 @@ export function useVoiceInput({ isActive, onInterimChange, onSentenceComplete, o
 
   useEffect(() => {
     if (!isActive) {
+      clearTimeout(restartTimerRef.current);
+      restartTimerRef.current = null;
       clearTimeout(silenceTimerRef.current);
       silenceTimerRef.current = null;
       finalTranscriptRef.current = '';
@@ -170,6 +175,7 @@ export function useVoiceInput({ isActive, onInterimChange, onSentenceComplete, o
       const recognition = new SpeechRecognition();
       recognition.continuous = !isMobile;
       recognition.interimResults = true;
+      recognition.lang = 'en-IN';
 
       recognition.onresult = (event) => {
         let nextFinal = '';
@@ -231,11 +237,15 @@ export function useVoiceInput({ isActive, onInterimChange, onSentenceComplete, o
           flushTranscript();
         }
 
-        if (!restartRequestedRef.current || isMobileRef.current) {
+        if (!restartRequestedRef.current) {
           return;
         }
 
-        window.setTimeout(startRecognition, 250);
+        clearTimeout(restartTimerRef.current);
+        restartTimerRef.current = window.setTimeout(
+          startRecognition,
+          isMobileRef.current ? MOBILE_RESTART_DELAY : DESKTOP_RESTART_DELAY,
+        );
       };
 
       recognitionRef.current = recognition;
@@ -246,6 +256,8 @@ export function useVoiceInput({ isActive, onInterimChange, onSentenceComplete, o
 
     return () => {
       restartRequestedRef.current = false;
+      clearTimeout(restartTimerRef.current);
+      restartTimerRef.current = null;
       clearTimeout(silenceTimerRef.current);
       silenceTimerRef.current = null;
     };
