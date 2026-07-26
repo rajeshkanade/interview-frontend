@@ -122,6 +122,45 @@ textarea {
   animation: pulse 1.6s infinite;
 }
 
+.accuracy-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #333;
+  border-radius: 999px;
+  background: #1a1a1a;
+  color: #9ca3af;
+  padding: 10px 16px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 160ms ease, color 160ms ease, background 160ms ease;
+}
+
+.accuracy-toggle:hover {
+  border-color: rgba(96, 165, 250, 0.45);
+  color: #dbeafe;
+}
+
+.accuracy-toggle.on {
+  border-color: rgba(96, 165, 250, 0.5);
+  background: rgba(96, 165, 250, 0.12);
+  color: #dbeafe;
+}
+
+.accuracy-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #52525b;
+}
+
+.accuracy-toggle.on .accuracy-dot {
+  background: #60a5fa;
+  box-shadow: 0 0 8px rgba(96, 165, 250, 0.8);
+}
+
 .session-button {
   border: 1px solid rgba(93, 202, 165, 0.35);
   border-radius: 999px;
@@ -172,6 +211,33 @@ textarea {
   animation: underlineShift 1.8s linear infinite;
 }
 
+.pending-fragment {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  border: 1px dashed rgba(250, 204, 21, 0.35);
+  border-radius: 14px;
+  background: rgba(250, 204, 21, 0.07);
+  color: #fef3c7;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.pending-label {
+  flex: 0 0 auto;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(250, 204, 21, 0.18);
+  color: #fde68a;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .capture-box {
   min-height: 160px;
   padding: 24px;
@@ -191,6 +257,55 @@ textarea {
 
 .capture-placeholder {
   color: #71717a;
+}
+
+.capture-audio {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  align-items: center;
+  justify-content: center;
+  min-height: 112px;
+}
+
+.level-meter {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 48px;
+}
+
+.level-bar {
+  width: 6px;
+  height: 12px;
+  border-radius: 3px;
+  background: #2a2a2a;
+  transition: height 90ms ease, background 120ms ease;
+}
+
+.level-bar.lit {
+  height: 30px;
+  background: #3f6d5c;
+}
+
+.level-meter.speaking .level-bar.lit {
+  height: 44px;
+  background: linear-gradient(180deg, #5dcaa5, #3f8f74);
+}
+
+.capture-audio-status {
+  color: #71717a;
+  font-family: system-ui, sans-serif;
+  font-size: 0.95rem;
+}
+
+.capture-audio-status.speaking {
+  color: #a7f3d0;
+}
+
+.mode-warning {
+  color: #fca5a5;
+  font-weight: 600;
 }
 
 .progress-track {
@@ -274,6 +389,17 @@ textarea {
   background: #3d2a6e;
   color: #f5f3ff;
   border-bottom-right-radius: 6px;
+}
+
+.heard-as {
+  display: block;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(245, 243, 255, 0.14);
+  color: rgba(216, 205, 255, 0.72);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  line-height: 1.45;
 }
 
 .answer-bubble {
